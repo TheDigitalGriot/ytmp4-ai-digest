@@ -8,12 +8,7 @@ import re
 import subprocess
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("CLAUDE_PLUGIN_DATA", Path(__file__).parent.parent / "data"))
-
-
-def get_env():
-    """Inherit current environment (including HTTPS_PROXY and other proxy variables)."""
-    return {**os.environ}
+from _utils import find_ytdlp, get_env, DATA_DIR
 
 
 def extract_video_id(url_or_id):
@@ -40,7 +35,7 @@ def format_timestamp(seconds):
 def get_stream_url(video_id):
     """Get the direct stream URL for a YouTube video using yt-dlp."""
     cmd = [
-        "yt-dlp",
+        find_ytdlp(),
         "--get-url",
         "--format", "best[height<=720]",
         f"https://www.youtube.com/watch?v={video_id}",

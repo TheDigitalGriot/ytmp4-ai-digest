@@ -9,16 +9,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from _utils import find_ytdlp, get_env, DATA_DIR
 from capture_frames import extract_video_id, capture_frame
 from get_transcript import get_transcript_ytdlp, format_transcript
-
-DATA_DIR = Path(os.environ.get("CLAUDE_PLUGIN_DATA", Path(__file__).parent.parent / "data"))
 SESSIONS_DIR = DATA_DIR / "sessions"
-
-
-def get_env():
-    """Inherit current environment."""
-    return {**os.environ}
 
 
 def parse_urls(urls):
@@ -40,7 +34,7 @@ def build_session_dir_name(title):
 
 def fetch_video_metadata(video_id):
     """Fetch full metadata for a single video using yt-dlp."""
-    cmd = ["yt-dlp", "--dump-json", "--no-download", f"https://www.youtube.com/watch?v={video_id}"]
+    cmd = [find_ytdlp(), "--dump-json", "--no-download", f"https://www.youtube.com/watch?v={video_id}"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=get_env())
         info = json.loads(result.stdout)
@@ -72,7 +66,7 @@ def fetch_thumbnail_base64(video_id):
     import tempfile
     with tempfile.TemporaryDirectory() as tmpdir:
         cmd = [
-            "yt-dlp", "--write-thumbnail", "--skip-download",
+            find_ytdlp(), "--write-thumbnail", "--skip-download",
             "--convert-thumbnails", "png",
             "-o", os.path.join(tmpdir, "thumb"),
             f"https://www.youtube.com/watch?v={video_id}",

@@ -7,13 +7,13 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("CLAUDE_PLUGIN_DATA", Path(__file__).parent.parent / "data"))
+from _utils import find_ytdlp, get_env, DATA_DIR
 OUTPUT_DIR = DATA_DIR / "output"
 
 
 def get_video_info(video_id):
     """Fetch video metadata using yt-dlp."""
-    cmd = ["yt-dlp", "--dump-json", "--no-download", f"https://www.youtube.com/watch?v={video_id}"]
+    cmd = [find_ytdlp(), "--dump-json", "--no-download", f"https://www.youtube.com/watch?v={video_id}"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         return json.loads(result.stdout)
@@ -24,7 +24,7 @@ def get_video_info(video_id):
 
 def download_thumbnail(video_id, output_path):
     """Download video thumbnail."""
-    cmd = ["yt-dlp", "--write-thumbnail", "--skip-download", "-o", str(output_path / "thumbnail"),
+    cmd = [find_ytdlp(), "--write-thumbnail", "--skip-download", "-o", str(output_path / "thumbnail"),
            f"https://www.youtube.com/watch?v={video_id}"]
     subprocess.run(cmd, capture_output=True)
 

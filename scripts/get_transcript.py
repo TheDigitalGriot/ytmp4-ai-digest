@@ -6,25 +6,11 @@ import argparse
 import subprocess
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("CLAUDE_PLUGIN_DATA", Path(__file__).parent.parent / "data"))
+from _utils import find_ytdlp, get_env, DATA_DIR
 
 
 def _find_ytdlp():
-    """Find yt-dlp executable, checking common install locations on Windows."""
-    import shutil
-    found = shutil.which("yt-dlp")
-    if found:
-        return found
-    # Check user Scripts dir (pip install --user)
-    user_scripts = Path.home() / "AppData" / "Roaming" / "Python" / f"Python{__import__('sys').version_info.major}{__import__('sys').version_info.minor}" / "Scripts" / "yt-dlp.exe"
-    if user_scripts.exists():
-        return str(user_scripts)
-    return "yt-dlp"  # fallback, let it fail with a clear error
-
-
-def get_env():
-    """Inherit current environment (including HTTPS_PROXY and other proxy variables)."""
-    return {**os.environ}
+    return find_ytdlp()
 
 
 def get_transcript_ytdlp(video_id):

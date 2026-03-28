@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import argparse
 
-DATA_DIR = Path(os.environ.get("CLAUDE_PLUGIN_DATA", Path(__file__).parent.parent / "data"))
+from _utils import find_ytdlp, get_env, DATA_DIR
 CHANNELS_FILE = Path(os.environ.get("CLAUDE_PLUGIN_ROOT", Path(__file__).parent.parent)) / "data" / "channels.json"
 OUTPUT_FILE = DATA_DIR / "videos.json"
 
@@ -18,11 +18,6 @@ AI_KEYWORDS = [
     "deepmind", "nvidia", "autonomous", "robot", "cursor", "copilot",
     "sora", "midjourney", "stable diffusion", "vibe coding"
 ]
-
-
-def get_env():
-    """Inherit current environment (including HTTPS_PROXY and other proxy variables)."""
-    return {**os.environ}
 
 
 def load_channels():
@@ -47,7 +42,7 @@ def fetch_channel_videos(channel, days=3):
         url = f"https://www.youtube.com/channel/{channel_id}/videos"
 
     cmd = [
-        "yt-dlp",
+        find_ytdlp(),
         "--flat-playlist",
         "--dump-json",
         "--playlist-end", "10",
