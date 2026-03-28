@@ -524,6 +524,16 @@ html, body {
   margin-top: 2px;
 }
 
+/* Topic accordion */
+.topic-section { background: #1a1d2e; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.topic-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #2d3148; cursor: pointer; }
+.topic-header:hover { background: #1e293b; }
+.topic-entries { padding: 12px 16px; display: grid; gap: 10px; }
+.topic-entry { display: flex; gap: 12px; background: #0f1117; border-radius: 6px; padding: 10px; }
+.topic-thumb { width: 80px; height: 48px; background: #1e293b; border-radius: 4px; flex-shrink: 0; position: relative; overflow: hidden; }
+.topic-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.topic-thumb .ts-overlay { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.7); color: white; font-size: 8px; padding: 1px 3px; border-radius: 2px; }
+
 /* Placeholder tabs */
 .placeholder-tab {
   display: flex;
@@ -851,8 +861,100 @@ html, body {
   // ── Placeholder Tabs ──
 
   function renderByTopic(data) {
-    document.getElementById('tab-content').innerHTML =
-      '<div class="placeholder-tab">By Topic — Coming soon...</div>';
+    const el = document.getElementById('tab-content');
+    const analysis = data.analysis || data;
+    const topics = analysis.topics || [];
+    const videos = data.videos || [];
+    const totalVideos = videos.length;
+
+    // Sort topics by video_coverage length descending
+    const sorted = topics.slice().sort((a, b) =>
+      (b.video_coverage || []).length - (a.video_coverage || []).length
+    );
+
+    let html = '';
+    sorted.forEach((topic, idx) => {
+      const color = TOPIC_COLORS[idx % TOPIC_COLORS.length];
+      const coverageCount = (topic.video_coverage || []).length;
+      const consensus = (topic.consensus || '').toLowerCase();
+      const expanded = idx === 0;
+
+      // Consensus badge
+      let consensusColor = '#64748b';
+      if (consensus === 'agreement') consensusColor = '#34d399';
+      else if (consensus === 'divided') consensusColor = '#fbbf24';
+      else if (consensus === 'skeptical') consensusColor = '#f472b6';
+
+      const sectionId = 'topic-section-' + idx;
+
+      html += '<div class="topic-section">';
+      // Header
+      html += '<div class="topic-header" onclick="window.__app.toggleTopic(\'' + sectionId + '\')">';
+      html += '<div style="display:flex;align-items:center;gap:12px;min-width:0">';
+      // Color indicator bar
+      html += '<div style="width:4px;height:28px;border-radius:2px;background:' + color + ';flex-shrink:0"></div>';
+      // Name + coverage + consensus
+      html += '<div style="min-width:0">';
+      html += '<div style="font-size:14px;font-weight:700;color:#e2e8f0">' + escHTML(topic.name) + '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-top:2px">';
+      html += '<span style="font-size:11px;color:#64748b">Discussed in ' + coverageCount + ' of ' + totalVideos + ' videos</span>';
+      if (consensus) {
+        html += '<span style="font-size:10px;font-weight:600;color:' + consensusColor + '">' + escHTML(topic.consensus) + '</span>';
+      }
+      html += '</div></div></div>';
+      // Arrow
+      html += '<span id="' + sectionId + '-arrow" style="color:#64748b;font-size:12px;flex-shrink:0">' + (expanded ? '\u25BC' : '\u25B6') + '</span>';
+      html += '</div>';
+
+      // Entries
+      html += '<div class="topic-entries" id="' + sectionId + '" style="' + (expanded ? '' : 'display:none') + '">';
+      const entries = topic.entries || [];
+      entries.forEach(entry => {
+        const video = videos.find(v => v.id === entry.video_id);
+        const channelName = video ? (video.channel || video.channel_name || 'Unknown') : 'Unknown';
+        const ts = formatTimestamp(entry.timestamp || 0);
+
+        html += '<div class="topic-entry">';
+        // Thumbnail
+        html += '<div class="topic-thumb">';
+        if (entry.screenshot_base64) {
+          html += '<img src="data:image/png;base64,' + entry.screenshot_base64 + '" alt="">';
+        } else {
+          html += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:9px">screenshot</div>';
+        }
+        html += '<span class="ts-overlay">' + ts + '</span>';
+        html += '</div>';
+        // Content
+        html += '<div style="min-width:0;flex:1">';
+        html += '<div style="display:flex;align-items:center;gap:6px">';
+        html += '<span style="font-size:11px;font-weight:700;color:' + color + '">' + escHTML(channelName) + '</span>';
+        html += '<span style="color:#64748b;font-size:10px">\u2022</span>';
+        html += '<span style="font-size:10px;color:#64748b">' + ts + '</span>';
+        html += '</div>';
+        if (entry.quote) {
+          html += '<div style="font-size:12px;color:#94a3b8;line-height:1.4;margin-top:4px">' + escHTML(entry.quote) + '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+    });
+
+    if (sorted.length === 0) {
+      html = '<div class="placeholder-tab">No topics found in this session</div>';
+    }
+
+    el.innerHTML = html;
+  }
+
+  function toggleTopicSection(sectionId) {
+    const entries = document.getElementById(sectionId);
+    const arrow = document.getElementById(sectionId + '-arrow');
+    if (!entries) return;
+    const visible = entries.style.display !== 'none';
+    entries.style.display = visible ? 'none' : 'grid';
+    if (arrow) arrow.textContent = visible ? '\u25B6' : '\u25BC';
   }
 
   function renderByVideo(data) {
@@ -906,7 +1008,7 @@ html, body {
   }
 
   // Expose for onclick handlers
-  window.__app = { loadSession, togglePanel: togglePanel };
+  window.__app = { loadSession, togglePanel: togglePanel, toggleTopic: toggleTopicSection };
   window.togglePanel = togglePanel;
   window.switchTab = switchTab;
   window.filterSessions = filterSessions;
