@@ -11,5 +11,11 @@ __pycache__/
 # Superpowers brainstorm artifacts
 .superpowers/
 
+# Prism working directory
+.prism/
+
 # Design docs are tracked
 !docs/
+
+# Prism local artifacts (not committed)
+.prism/local/
