@@ -1,6 +1,6 @@
 ---
 name: ytmp4-ai-digest
-description: Browse subscribed YouTube channels for AI-related videos, fetch transcripts, and generate summary digests in Markdown. Use this skill whenever the user mentions "AI videos", "latest AI news", "YouTube AI content", "summarize YouTube", "AI video digest", "what's new in AI", "AI podcast", "youtube ai digest", or wants to catch up on recent AI developments even without specifying a source.
+description: Browse subscribed YouTube channels for AI-related videos, fetch transcripts, and generate summary digests in Markdown. Also supports multi-video comparison — cross-video analysis with interactive dashboard, frame screenshots, and agentic chat. Use this skill whenever the user mentions "AI videos", "latest AI news", "YouTube AI content", "summarize YouTube", "AI video digest", "what's new in AI", "AI podcast", "youtube ai digest", "compare these videos", "compare video X and Y", "what's the difference between these videos", "cross-video analysis", or wants to catch up on recent AI developments even without specifying a source.
 ---
 
 # YouTube AI Digest
@@ -133,3 +133,45 @@ NVIDIA's new model achieves a breakthrough in autonomous driving perception...
 | "Create a digest" | Run digest_all.py, then read the file and generate summaries |
 | "Summarize video #3" | Run get_transcript.py to fetch transcript, then summarize |
 | "Anything about Anthropic lately?" | Run fetch_videos.py --keyword "anthropic" |
+
+## Video Comparison
+
+Compare multiple YouTube videos on the same topic with an interactive dashboard.
+
+### Comparison Workflow
+
+```bash
+# Step 1: Fetch transcripts and metadata for all videos
+cd ${CLAUDE_PLUGIN_ROOT}
+python scripts/compare_videos.py --urls URL1 URL2 URL3
+
+# Step 2: Claude reads comparison_data.json and fills in the analysis
+# (unified_summary, topics, disagreements, key_moments)
+
+# Step 3: Launch the interactive viewer
+python scripts/compare_server.py --port 5123 --session SESSION_ID
+```
+
+### What Claude Does After compare_videos.py
+
+After the script outputs comparison_data.json, Claude reads the transcripts and fills in:
+- **Unified Summary** — cross-video synthesis paragraph
+- **Topics** — shared themes with per-video timestamps, quotes, and consensus status
+- **Disagreements** — where creators differ, with both sides stated
+- **Key Moments** — notable timestamps worth capturing as screenshots
+
+Then Claude updates the JSON file and launches the viewer.
+
+### Frame Screenshots
+
+Claude auto-identifies key moments from transcripts and captures frames using ffmpeg.
+Users can also click any point on the timeline in the viewer to capture additional frames on demand.
+
+### Comparison Scenarios
+
+| User Says | Claude Should Do |
+|-----------|-----------------|
+| "Compare these videos: URL1, URL2" | Run compare_videos.py, analyze, launch viewer |
+| "What do they disagree on?" | Reference the disagreements section |
+| "Capture the chart at 4:21 in video 2" | Run capture_frames.py for that timestamp |
+| "Show me all sessions" | Launch viewer showing session history |
