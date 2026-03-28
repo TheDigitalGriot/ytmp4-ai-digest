@@ -534,6 +534,22 @@ html, body {
 .topic-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .topic-thumb .ts-overlay { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.7); color: white; font-size: 8px; padding: 1px 3px; border-radius: 2px; }
 
+/* By Video split layout */
+.by-video-layout { display: flex; gap: 16px; height: 100%; }
+.by-video-sidebar { width: 200px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.by-video-detail { flex: 1; overflow-y: auto; }
+.bv-video-card { background: #1a1d2e; border-radius: 8px; padding: 8px; cursor: pointer; }
+.bv-video-card:hover { background: #1e293b; }
+.bv-video-card.active { border-left: 3px solid #60a5fa; background: #1e293b; }
+.bv-video-card-thumb { width: 100%; aspect-ratio: 16/9; background: #2d3148; border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.bv-video-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.topic-pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; margin: 2px; }
+.timeline-bar { width: 100%; height: 40px; background: #1e293b; border-radius: 6px; position: relative; cursor: crosshair; margin: 12px 0; }
+.timeline-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; top: 50%; transform: translate(-50%, -50%); cursor: pointer; }
+.bv-moment-card { display: flex; gap: 12px; background: #0f1117; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.bv-moment-thumb { width: 120px; height: 72px; background: #1e293b; border-radius: 4px; flex-shrink: 0; overflow: hidden; position: relative; }
+.bv-moment-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
 /* Placeholder tabs */
 .placeholder-tab {
   display: flex;
@@ -957,9 +973,199 @@ html, body {
     if (arrow) arrow.textContent = visible ? '\u25B6' : '\u25BC';
   }
 
+  let _bvCurrentVideoId = null;
+  let _bvData = null;
+
+  function parseDuration(dur) {
+    if (typeof dur === 'number') return dur;
+    if (!dur || typeof dur !== 'string') return 0;
+    const parts = dur.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return parts[0] || 0;
+  }
+
   function renderByVideo(data) {
-    document.getElementById('tab-content').innerHTML =
-      '<div class="placeholder-tab">By Video — Coming soon...</div>';
+    _bvData = data;
+    const el = document.getElementById('tab-content');
+    const videos = data.videos || [];
+
+    if (videos.length === 0) {
+      el.innerHTML = '<div class="placeholder-tab">No videos in this session</div>';
+      return;
+    }
+
+    let sidebarHtml = '';
+    videos.forEach(v => {
+      const thumb = v.thumbnail_base64
+        ? '<img src="data:image/jpeg;base64,' + v.thumbnail_base64 + '" alt="">'
+        : (v.thumbnail
+          ? '<img src="' + escAttr(v.thumbnail) + '" alt="">'
+          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:9px">No thumb</div>');
+      const durationStr = v.duration ? (typeof v.duration === 'number' ? formatTimestamp(v.duration) : escHTML(v.duration)) : '';
+      sidebarHtml +=
+        '<div class="bv-video-card" data-video-id="' + escAttr(v.id) + '" onclick="selectVideo(\'' + escAttr(v.id) + '\')">' +
+          '<div class="bv-video-card-thumb">' + thumb + '</div>' +
+          '<div style="font-size:11px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escAttr(v.title || '') + '">' + escHTML(v.title || 'Untitled') + '</div>' +
+          '<div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHTML(v.channel || v.channel_name || '') + '</div>' +
+          (durationStr ? '<div style="font-size:10px;color:#64748b">' + durationStr + '</div>' : '') +
+        '</div>';
+    });
+
+    el.innerHTML =
+      '<div class="by-video-layout">' +
+        '<div class="by-video-sidebar">' + sidebarHtml + '</div>' +
+        '<div class="by-video-detail" id="bv-detail"></div>' +
+      '</div>';
+
+    // Select first video by default
+    selectVideo(videos[0].id);
+  }
+
+  function selectVideo(videoId) {
+    _bvCurrentVideoId = videoId;
+    const data = _bvData;
+    if (!data) return;
+
+    const videos = data.videos || [];
+    const video = videos.find(v => v.id === videoId);
+    if (!video) return;
+
+    // Update sidebar active state
+    document.querySelectorAll('.bv-video-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.videoId === videoId);
+    });
+
+    const analysis = data.analysis || data;
+    const allMoments = analysis.key_moments || data.key_moments || [];
+    const moments = allMoments.filter(m => m.video_id === videoId);
+    const topics = analysis.topics || [];
+    const durationSec = parseDuration(video.duration);
+
+    // Video header
+    const thumb = video.thumbnail_base64
+      ? '<img src="data:image/jpeg;base64,' + video.thumbnail_base64 + '" alt="" style="width:240px;height:135px;object-fit:cover;border-radius:6px">'
+      : (video.thumbnail
+        ? '<img src="' + escAttr(video.thumbnail) + '" alt="" style="width:240px;height:135px;object-fit:cover;border-radius:6px">'
+        : '<div style="width:240px;height:135px;background:#2d3148;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#64748b">No thumbnail</div>');
+
+    let html = '<div style="display:flex;gap:16px;margin-bottom:16px">';
+    html += '<div style="flex-shrink:0">' + thumb + '</div>';
+    html += '<div style="min-width:0">';
+    html += '<div style="font-size:18px;font-weight:700;color:#e2e8f0;margin-bottom:4px">' + escHTML(video.title || 'Untitled') + '</div>';
+    html += '<div style="font-size:12px;color:#94a3b8;margin-bottom:2px">' + escHTML(video.channel || video.channel_name || '') + '</div>';
+    if (video.upload_date || video.date) {
+      html += '<div style="font-size:11px;color:#64748b">' + escHTML(video.upload_date || video.date || '') + '</div>';
+    }
+    if (video.view_count || video.views) {
+      html += '<div style="font-size:11px;color:#64748b">' + escHTML(String(video.view_count || video.views)) + ' views</div>';
+    }
+    if (video.summary) {
+      html += '<div style="font-size:12px;color:#94a3b8;margin-top:6px;line-height:1.5">' + escHTML(video.summary) + '</div>';
+    }
+    html += '</div></div>';
+
+    // Topic pills
+    const matchedTopics = topics.filter(t => (t.video_coverage || []).includes(videoId));
+    if (matchedTopics.length > 0) {
+      html += '<div style="margin-bottom:12px">';
+      matchedTopics.forEach((t, idx) => {
+        const topicIdx = topics.indexOf(t);
+        const color = TOPIC_COLORS[topicIdx % TOPIC_COLORS.length];
+        html += '<span class="topic-pill" style="background:' + color + '22;color:' + color + ';border:1px solid ' + color + '44">' + escHTML(t.name || t.topic || 'Topic') + '</span>';
+      });
+      html += '</div>';
+    }
+
+    // Timeline bar
+    html += '<div style="margin-bottom:16px">';
+    html += '<div class="timeline-bar" id="bv-timeline" data-duration="' + durationSec + '" onclick="handleTimelineClick(event)">';
+    moments.forEach((m, idx) => {
+      if (durationSec > 0 && m.timestamp != null) {
+        const ts = typeof m.timestamp === 'number' ? m.timestamp : parseDuration(m.timestamp);
+        const pct = Math.min((ts / durationSec) * 100, 100);
+        const color = TOPIC_COLORS[idx % TOPIC_COLORS.length];
+        html += '<div class="timeline-dot" style="left:' + pct + '%;background:' + color + '" title="' + escAttr(m.label || m.description || '') + ' (' + formatTimestamp(ts) + ')"></div>';
+      }
+    });
+    html += '</div>';
+    html += '<div style="font-size:11px;color:#64748b">Click anywhere to capture frame</div>';
+    html += '</div>';
+
+    // Moment entries
+    if (moments.length > 0) {
+      html += '<div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:8px">Key Moments</div>';
+    }
+    html += '<div id="bv-moments-list">';
+    moments.forEach(m => {
+      html += buildMomentEntry(m);
+    });
+    html += '</div>';
+
+    document.getElementById('bv-detail').innerHTML = html;
+  }
+
+  function buildMomentEntry(m) {
+    const ts = typeof m.timestamp === 'number' ? m.timestamp : parseDuration(m.timestamp);
+    const thumb = m.screenshot_base64
+      ? '<img src="data:image/jpeg;base64,' + m.screenshot_base64 + '" alt="">'
+      : (m.screenshot
+        ? '<img src="' + escAttr(m.screenshot) + '" alt="">'
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:9px">No frame</div>');
+    return '<div class="bv-moment-card">' +
+      '<div class="bv-moment-thumb">' + thumb +
+        '<span style="position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,0.75);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + formatTimestamp(ts) + '</span>' +
+      '</div>' +
+      '<div style="min-width:0;flex:1">' +
+        '<div style="font-size:12px;font-weight:600;color:#e2e8f0">' + escHTML(m.label || m.description || '') + '</div>' +
+        (m.description && m.label ? '<div style="font-size:11px;color:#94a3b8;margin-top:4px;line-height:1.4">' + escHTML(m.description) + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  async function handleTimelineClick(event) {
+    const bar = document.getElementById('bv-timeline');
+    if (!bar || !_bvCurrentVideoId) return;
+    const rect = bar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const barWidth = rect.width;
+    const durationSec = parseFloat(bar.dataset.duration) || 0;
+    if (durationSec <= 0) return;
+
+    const timestamp = Math.round((clickX / barWidth) * durationSec);
+
+    // Show loading indicator
+    const hint = bar.nextElementSibling;
+    if (hint) hint.textContent = 'Capturing frame at ' + formatTimestamp(timestamp) + '...';
+
+    try {
+      const resp = await fetch('/api/screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_id: _bvCurrentVideoId, timestamp: timestamp })
+      });
+      if (!resp.ok) throw new Error('Server error ' + resp.status);
+      const result = await resp.json();
+
+      // Append new moment entry
+      const momentsList = document.getElementById('bv-moments-list');
+      if (momentsList && result.screenshot_base64) {
+        const newMoment = {
+          timestamp: timestamp,
+          screenshot_base64: result.screenshot_base64,
+          label: 'Captured frame',
+          description: 'On-demand capture at ' + formatTimestamp(timestamp)
+        };
+        momentsList.insertAdjacentHTML('beforeend', buildMomentEntry(newMoment));
+      }
+
+      if (hint) hint.textContent = 'Click anywhere to capture frame';
+    } catch (err) {
+      if (hint) {
+        hint.textContent = 'Failed to capture frame: ' + err.message;
+        setTimeout(() => { hint.textContent = 'Click anywhere to capture frame'; }, 3000);
+      }
+    }
   }
 
   // ── Helpers ──
@@ -1012,6 +1218,8 @@ html, body {
   window.togglePanel = togglePanel;
   window.switchTab = switchTab;
   window.filterSessions = filterSessions;
+  window.selectVideo = selectVideo;
+  window.handleTimelineClick = handleTimelineClick;
 
   // Expose named functions for external use
   window.loadSession = loadSession;
