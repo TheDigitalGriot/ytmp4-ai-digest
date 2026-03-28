@@ -1,0 +1,109 @@
+<h2>Collapsed Panel — Design Options</h2>
+<p class="subtitle">Three alternatives to vertical text. Which feels most elegant?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Tooltip on Hover</h3>
+      <p>Clean icon-only strip with badge counts. Session title appears as a tooltip bubble on hover — no text clutter in the collapsed state.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-body" style="padding:0; background:#0f1117; display:flex; height:220px;">
+          <div style="width:48px; background:#0d0f1a; border-right:1px solid #1e2235; display:flex; flex-direction:column; align-items:center; padding-top:10px; gap:6px;">
+            <span style="color:#64748b; font-size:16px; cursor:pointer; margin-bottom:6px;">&raquo;</span>
+
+            <div style="position:relative;">
+              <div style="width:32px; height:32px; background:#7c3aed; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:bold; border:2px solid #9333ea;">4</div>
+              <!-- Tooltip -->
+              <div style="position:absolute; left:42px; top:50%; transform:translateY(-50%); background:#1e293b; border:1px solid #334155; border-radius:6px; padding:6px 10px; white-space:nowrap; color:#e2e8f0; font-size:11px; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                GPT-5 Announcements
+                <div style="position:absolute; left:-5px; top:50%; transform:translateY(-50%) rotate(45deg); width:8px; height:8px; background:#1e293b; border-left:1px solid #334155; border-bottom:1px solid #334155;"></div>
+              </div>
+            </div>
+
+            <div style="width:32px; height:32px; background:#1e293b; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#93c5fd; font-size:12px; font-weight:bold;">1</div>
+            <div style="width:32px; height:32px; background:#1e293b; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#a78bfa; font-size:12px; font-weight:bold;">3</div>
+            <div style="width:32px; height:32px; background:#1e293b; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#93c5fd; font-size:12px; font-weight:bold;">1</div>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px;">Minimal — titles only on hover</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Truncated Horizontal Labels</h3>
+      <p>Slightly wider collapsed panel (~120px) that shows truncated session titles horizontally. Readable at a glance without needing to hover.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-body" style="padding:0; background:#0f1117; display:flex; height:220px;">
+          <div style="width:120px; background:#0d0f1a; border-right:1px solid #1e2235; display:flex; flex-direction:column; padding-top:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:0 10px; margin-bottom:10px;">
+              <span style="color:#64748b; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">History</span>
+              <span style="color:#64748b; font-size:16px; cursor:pointer;">&raquo;</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; border-left:3px solid #7c3aed; cursor:pointer; margin:1px 0;">
+              <div style="width:22px; height:22px; background:#7c3aed; border-radius:4px; display:flex; align-items:center; justify-content:center; color:white; font-size:9px; font-weight:bold; flex-shrink:0;">4</div>
+              <div style="color:#e2e8f0; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">GPT-5 Announce...</div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; cursor:pointer; margin:1px 0;">
+              <div style="width:22px; height:22px; background:#1e293b; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#93c5fd; font-size:9px; font-weight:bold; flex-shrink:0;">1</div>
+              <div style="color:#64748b; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Claude 4 Opus...</div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; cursor:pointer; margin:1px 0;">
+              <div style="width:22px; height:22px; background:#1e293b; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#a78bfa; font-size:9px; font-weight:bold; flex-shrink:0;">3</div>
+              <div style="color:#64748b; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Sora vs Veo...</div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; cursor:pointer; margin:1px 0;">
+              <div style="width:22px; height:22px; background:#1e293b; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#93c5fd; font-size:9px; font-weight:bold; flex-shrink:0;">1</div>
+              <div style="color:#64748b; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Devin AI: One...</div>
+            </div>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px;">Readable — no hover needed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Avatar Initials + Dot Indicator</h3>
+      <p>Clean circle avatars using the first letter/initials of each session title. Active session gets a colored ring. Hover for full title. Feels like a messaging app sidebar.</p>
+      <div class="mockup" style="margin-top:12px;">
+        <div class="mockup-body" style="padding:0; background:#0f1117; display:flex; height:220px;">
+          <div style="width:56px; background:#0d0f1a; border-right:1px solid #1e2235; display:flex; flex-direction:column; align-items:center; padding-top:10px; gap:8px;">
+            <span style="color:#64748b; font-size:16px; cursor:pointer; margin-bottom:4px;">&raquo;</span>
+
+            <!-- Active -->
+            <div style="position:relative;">
+              <div style="width:36px; height:36px; background:#1e293b; border:2px solid #7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#e2e8f0; font-size:12px; font-weight:600; cursor:pointer;">G5</div>
+              <div style="position:absolute; bottom:-1px; right:-1px; width:12px; height:12px; background:#7c3aed; border-radius:50%; border:2px solid #0d0f1a; display:flex; align-items:center; justify-content:center; color:white; font-size:7px;">4</div>
+            </div>
+
+            <div style="position:relative;">
+              <div style="width:36px; height:36px; background:#1e293b; border:2px solid transparent; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px; font-weight:600; cursor:pointer;">C4</div>
+              <div style="position:absolute; bottom:-1px; right:-1px; width:12px; height:12px; background:#1e40af; border-radius:50%; border:2px solid #0d0f1a; display:flex; align-items:center; justify-content:center; color:white; font-size:7px;">1</div>
+            </div>
+
+            <div style="position:relative;">
+              <div style="width:36px; height:36px; background:#1e293b; border:2px solid transparent; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px; font-weight:600; cursor:pointer;">SV</div>
+              <div style="position:absolute; bottom:-1px; right:-1px; width:12px; height:12px; background:#7c3aed; border-radius:50%; border:2px solid #0d0f1a; display:flex; align-items:center; justify-content:center; color:white; font-size:7px;">3</div>
+            </div>
+
+            <div style="position:relative;">
+              <div style="width:36px; height:36px; background:#1e293b; border:2px solid transparent; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px; font-weight:600; cursor:pointer;">DA</div>
+              <div style="position:absolute; bottom:-1px; right:-1px; width:12px; height:12px; background:#1e40af; border-radius:50%; border:2px solid #0d0f1a; display:flex; align-items:center; justify-content:center; color:white; font-size:7px;">1</div>
+            </div>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:12px;">App-like — hover for titles</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

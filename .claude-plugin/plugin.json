@@ -1,0 +1,13 @@
+{
+  "name": "ytmp4-ai-digest",
+  "version": "1.1.0",
+  "description": "Browse AI-related YouTube videos from subscribed channels, fetch transcripts, and generate Markdown summary digests.",
+  "author": {
+    "name": "yizhiyanhua-ai",
+    "url": "https://github.com/yizhiyanhua-ai"
+  },
+  "homepage": "https://github.com/yizhiyanhua-ai/ytmp4-ai-digest",
+  "repository": "https://github.com/yizhiyanhua-ai/ytmp4-ai-digest",
+  "license": "MIT",
+  "keywords": ["youtube", "ai", "video", "transcript", "summary", "digest", "markdown", "report"]
+}

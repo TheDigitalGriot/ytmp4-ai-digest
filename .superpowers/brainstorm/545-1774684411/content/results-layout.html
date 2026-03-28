@@ -1,0 +1,47 @@
+<h2>How should the comparison results be organized?</h2>
+<p class="subtitle">Pick the structure that fits how you'd naturally explore a multi-video analysis</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Topic-Centric</h3>
+      <p>Organized by <strong>themes/topics</strong> that Claude extracts across all videos. Each section shows what each video said about that topic, with timestamps and screenshots. Great for "what does everyone think about X?"</p>
+      <div style="margin-top:12px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:13px; font-family:monospace; line-height:1.8;">
+        <strong>Example structure:</strong><br>
+        &bull; Unified Summary<br>
+        &bull; Topic: "Scaling Laws" &rarr; Video A [04:21], Video C [12:03]<br>
+        &bull; Topic: "Safety Concerns" &rarr; Video A [08:15], Video B [03:40]<br>
+        &bull; Where They Disagree<br>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Video-Centric</h3>
+      <p>Each video gets its own section with summary, key moments, and screenshots. A separate <strong>"Cross-Analysis"</strong> tab shows common themes and differences. Good for exploring each video individually first.</p>
+      <div style="margin-top:12px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:13px; font-family:monospace; line-height:1.8;">
+        <strong>Example structure:</strong><br>
+        &bull; Overview Dashboard<br>
+        &bull; Tab: Video A &rarr; summary, timeline, screenshots<br>
+        &bull; Tab: Video B &rarr; summary, timeline, screenshots<br>
+        &bull; Tab: Cross-Analysis &rarr; common topics, differences<br>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Dashboard with Both Views</h3>
+      <p>A top-level dashboard with unified summary and topic map, then <strong>toggle between topic-centric and video-centric</strong> views. Most flexible but more complex UI.</p>
+      <div style="margin-top:12px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:13px; font-family:monospace; line-height:1.8;">
+        <strong>Example structure:</strong><br>
+        &bull; Dashboard: summary + topic map + key stats<br>
+        &bull; View toggle: [By Topic] / [By Video]<br>
+        &bull; Either view shows timestamps + screenshots<br>
+        &bull; Click any moment &rarr; grab additional screenshot<br>
+      </div>
+    </div>
+  </div>
+</div>

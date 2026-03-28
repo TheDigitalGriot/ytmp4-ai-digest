@@ -1,0 +1,26 @@
+<h2>How should the video comparison feature be triggered?</h2>
+<p class="subtitle">This determines the overall architecture — standalone app vs Claude-integrated vs hybrid</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Standalone Web App</h3>
+      <p>A self-contained local web app with its own UI. You open it in the browser, paste YouTube URLs, and it orchestrates everything — calling the Python scripts behind the scenes via a local API server. Works independently of Claude.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Claude-Driven Workflow</h3>
+      <p>You tell Claude "compare these videos: URL1, URL2, URL3" and Claude runs the scripts, generates the analysis, then outputs results as Markdown in the terminal. No separate web UI — Claude handles everything conversationally.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid: Claude + Interactive Viewer</h3>
+      <p>Claude triggers the workflow conversationally ("compare these videos..."), runs the scripts to fetch transcripts and screenshots, generates the cross-video analysis, then serves results as an interactive HTML page you can explore — with clickable timestamps, side-by-side screenshots, and comparison views.</p>
+    </div>
+  </div>
+</div>
