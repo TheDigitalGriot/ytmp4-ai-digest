@@ -951,8 +951,20 @@ html, body {
     const videos = data.videos || [];
     const totalVideos = videos.length;
 
+    // Normalize topics: support both entries[] and timestamps[] formats
+    const normalized = topics.map(t => {
+      const entries = t.entries || (t.timestamps || []).map(ts => ({
+        video_id: ts.video_id,
+        timestamp: ts.start || ts.timestamp || 0,
+        quote: ts.quote || '',
+        screenshot_base64: ts.screenshot_base64 || null
+      }));
+      const coverage = t.video_coverage || [...new Set(entries.map(e => e.video_id))];
+      return { ...t, entries, video_coverage: coverage };
+    });
+
     // Sort topics by video_coverage length descending
-    const sorted = topics.slice().sort((a, b) =>
+    const sorted = normalized.slice().sort((a, b) =>
       (b.video_coverage || []).length - (a.video_coverage || []).length
     );
 
@@ -960,7 +972,8 @@ html, body {
     sorted.forEach((topic, idx) => {
       const color = TOPIC_COLORS[idx % TOPIC_COLORS.length];
       const coverageCount = (topic.video_coverage || []).length;
-      const consensus = (topic.consensus || '').toLowerCase();
+      const consensusRaw = topic.consensus;
+      const consensus = (consensusRaw === true ? 'agreement' : typeof consensusRaw === 'string' ? consensusRaw : '').toLowerCase();
       const expanded = idx === 0;
 
       // Consensus badge
@@ -1003,6 +1016,8 @@ html, body {
         html += '<div class="topic-thumb">';
         if (entry.screenshot_base64) {
           html += '<img src="data:image/png;base64,' + entry.screenshot_base64 + '" alt="">';
+        } else if (entry.video_id) {
+          html += '<img src="https://img.youtube.com/vi/' + escAttr(entry.video_id) + '/hqdefault.jpg" alt="">';
         } else {
           html += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:9px">screenshot</div>';
         }
@@ -1357,6 +1372,77 @@ html, body {
     switchTab('by-video');
   }
 
+  // ── Auto-fetch missing screenshots ──
+
+  async function autoFetchScreenshots() {
+    if (!currentSessionData) return;
+    const analysis = currentSessionData.analysis || currentSessionData;
+    const targets = [];
+
+    // Collect from key_moments
+    (analysis.key_moments || []).forEach((m, i) => {
+      if (!m.screenshot_base64 && m.video_id && m.timestamp != null) {
+        targets.push({ ref: m, video_id: m.video_id, timestamp: m.timestamp });
+      }
+    });
+
+    // Collect from topic timestamps/entries
+    (analysis.topics || []).forEach(topic => {
+      (topic.timestamps || topic.entries || []).forEach(ts => {
+        const t = ts.start || ts.timestamp || 0;
+        const vid = ts.video_id;
+        if (!ts.screenshot_base64 && vid && t != null) {
+          targets.push({ ref: ts, video_id: vid, timestamp: t });
+        }
+      });
+    });
+
+    if (targets.length === 0) return;
+
+    // Deduplicate by video_id + timestamp
+    const seen = new Set();
+    const unique = targets.filter(t => {
+      const key = t.video_id + '_' + t.timestamp;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Fetch in parallel (max 3 concurrent)
+    const batchSize = 3;
+    for (let i = 0; i < unique.length; i += batchSize) {
+      const batch = unique.slice(i, i + batchSize);
+      const results = await Promise.allSettled(batch.map(async t => {
+        try {
+          const res = await fetch('/api/screenshot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ video_id: t.video_id, timestamp: t.timestamp })
+          });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return { key: t.video_id + '_' + t.timestamp, b64: data.screenshot_base64 };
+        } catch { return null; }
+      }));
+
+      // Apply results to all matching refs
+      const b64Map = {};
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value && r.value.b64) {
+          b64Map[r.value.key] = r.value.b64;
+        }
+      });
+
+      targets.forEach(t => {
+        const key = t.video_id + '_' + t.timestamp;
+        if (b64Map[key]) t.ref.screenshot_base64 = b64Map[key];
+      });
+    }
+
+    // Re-render to show the new screenshots
+    renderActiveTab();
+  }
+
   // ── Init ──
 
   async function init() {
@@ -1366,6 +1452,8 @@ html, body {
     } else {
       renderActiveTab();
     }
+    // Lazily fetch any missing screenshots in the background
+    autoFetchScreenshots();
   }
 
   // Expose for onclick handlers
