@@ -7,3 +7,9 @@ __pycache__/
 *.png
 *.jpg
 *.webp
+
+# Superpowers brainstorm artifacts
+.superpowers/
+
+# Design docs are tracked
+!docs/
