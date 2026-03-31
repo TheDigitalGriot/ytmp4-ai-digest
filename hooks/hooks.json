@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python --version >/dev/null 2>&1 && python -c \"import yt_dlp, youtube_transcript_api\" 2>/dev/null && echo 'ytmp4-ai-digest: dependencies OK' || echo 'ytmp4-ai-digest: WARNING — missing Python dependencies. Run: pip install -r ${CLAUDE_PLUGIN_ROOT}/requirements.txt'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "If the Bash tool just ran a ytmp4-ai-digest Python script (fetch_videos.py, get_transcript.py, digest_all.py, compare_videos.py, generate_report.py, capture_frames.py) that wrote output files, immediately read those output files so the user doesn't have to ask. Check the script's stdout for the output file path. Context: <tool_input>"
+          }
+        ]
+      }
+    ]
+  }
+}
