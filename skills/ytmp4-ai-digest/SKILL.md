@@ -62,11 +62,20 @@ Style: concise, information-dense. No filler openings like "This video discusses
 
 ## Comparison Analysis
 
-After `compare_videos.py` outputs comparison_data.json, Claude reads transcripts and fills:
-- **Unified Summary** — cross-video synthesis
-- **Topics** — shared themes with per-video timestamps, quotes, consensus status
+The video-comparator agent handles the full comparison workflow end-to-end. When dispatched, it:
+1. Runs `compare_videos.py` to fetch video data and transcripts
+2. Reads ALL transcripts and fills comparison_data.json with complete analysis
+3. **Launches the viewer automatically** — no second prompt needed
+
+The agent fills these required fields (viewer tabs are empty without them):
+- **Per-video `summary`** — added to each video object for the By Video tab
+- **Unified Summary** — cross-video synthesis paragraph
+- **Topics** — with `name`, `entries` (video_id, timestamp, quote), `video_coverage`, `consensus`
 - **Disagreements** — where creators differ, both sides stated
-- **Key Moments** — notable timestamps for frame capture
+- **Key Moments** — with `video_id`, `timestamp`, `label`, `description`
+- **Stats** — counts for topics, disagreements, key moments
+
+**IMPORTANT:** The video-comparator agent must complete ALL of these in a single pass and launch the viewer at the end. Do not return to the user between steps.
 
 Frame screenshots: Claude auto-identifies key moments; users can also click timeline in the viewer.
 
