@@ -356,18 +356,47 @@ def add_videos_to_session(session_id, new_videos):
 
 def main():
     parser = argparse.ArgumentParser(description="Compare multiple YouTube videos")
-    parser.add_argument("--urls", nargs="+", required=True, help="YouTube video URLs or IDs")
+    parser.add_argument("--urls", nargs="+", help="YouTube video URLs or IDs")
     parser.add_argument("--title", default=None, help="Session title (auto-generated if omitted)")
+    parser.add_argument("--list-videos", action="store_true", help="List all previously analyzed videos")
+    parser.add_argument("--from-session", default=None, help="Pull videos from an existing session ID")
+    parser.add_argument("--pick", nargs="+", help="Cherry-pick specific video IDs (use with --from-session)")
+    parser.add_argument("--add-to", default=None, help="Add videos to an existing session instead of creating new")
     args = parser.parse_args()
 
-    video_ids = parse_urls(args.urls)
-    print(f"Comparing {len(video_ids)} videos...\n", flush=True)
+    # Mode 1: List videos
+    if args.list_videos:
+        list_all_videos()
+        return
 
+    # Gather videos from library (--from-session / --pick)
     videos = []
-    for vid in video_ids:
-        video_data = process_video(vid)
-        videos.append(video_data)
+    if args.from_session:
+        session_videos = load_session_videos(args.from_session, args.pick)
+        print(f"Loaded {len(session_videos)} video(s) from session {args.from_session}")
+        videos.extend(session_videos)
 
+    # Gather videos from new URLs
+    if args.urls:
+        video_ids = parse_urls(args.urls)
+        print(f"Fetching {len(video_ids)} new video(s)...\n", flush=True)
+        for vid in video_ids:
+            video_data = process_video(vid)
+            videos.append(video_data)
+
+    if not videos:
+        parser.error("No videos specified. Use --urls, --from-session, or --list-videos.")
+
+    # Mode 2: Add to existing session
+    if args.add_to:
+        output_path = add_videos_to_session(args.add_to, videos)
+        print(f"\nDone! {len(videos)} video(s) added to session.")
+        print(f"Output: {output_path}")
+        print("\nClaude: read the comparison_data.json file and fill in the analysis section")
+        print("(unified_summary, topics, disagreements, key_moments)")
+        return
+
+    # Mode 3: Create new session (default)
     title = args.title or f"Comparison: {', '.join(v['channel'] for v in videos[:3])}"
     if len(videos) > 3:
         title += f" +{len(videos) - 3}"
