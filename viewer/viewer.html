@@ -549,6 +549,16 @@ html, body {
 .bv-moment-card { display: flex; gap: 12px; background: #0f1117; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
 .bv-moment-thumb { width: 120px; height: 72px; background: #1e293b; border-radius: 4px; flex-shrink: 0; overflow: hidden; position: relative; }
 .bv-moment-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.digest-section { margin-bottom: 16px; }
+.digest-section-label { font-size: 13px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+.digest-card { background: #1e293b; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+.digest-card-label { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.digest-card-text { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+.digest-card-text li { margin-bottom: 4px; }
+.digest-card--takeaway { border: 1px solid #3b82f6; }
+.digest-card--takeaway .digest-card-label { color: #60a5fa; }
+.digest-card--points .digest-card-label { color: #34d399; }
+.digest-card--matters .digest-card-label { color: #fbbf24; }
 
 /* Placeholder tabs */
 .placeholder-tab {
@@ -1347,6 +1357,37 @@ html, body {
         const color = TOPIC_COLORS[topicIdx % TOPIC_COLORS.length];
         html += '<span class="topic-pill" style="background:' + color + '22;color:' + color + ';border:1px solid ' + color + '44">' + escHTML(t.name || t.topic || 'Topic') + '</span>';
       });
+      html += '</div>';
+    }
+
+    // Video Digest section
+    const digest = video.digest || {};
+    const hasDigest = digest.core_takeaway || (digest.key_points && digest.key_points.length > 0) || digest.why_it_matters;
+    if (hasDigest) {
+      html += '<div class="digest-section">';
+      html += '<div class="digest-section-label">Video Digest</div>';
+      if (digest.core_takeaway) {
+        html += '<div class="digest-card digest-card--takeaway">';
+        html += '<div class="digest-card-label">Core Takeaway</div>';
+        html += '<div class="digest-card-text">' + escHTML(digest.core_takeaway) + '</div>';
+        html += '</div>';
+      }
+      if (digest.key_points && digest.key_points.length > 0) {
+        html += '<div class="digest-card digest-card--points">';
+        html += '<div class="digest-card-label">Key Points</div>';
+        html += '<ul class="digest-card-text">';
+        digest.key_points.forEach(point => {
+          html += '<li>' + escHTML(point) + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+      if (digest.why_it_matters) {
+        html += '<div class="digest-card digest-card--matters">';
+        html += '<div class="digest-card-label">Why It Matters</div>';
+        html += '<div class="digest-card-text">' + escHTML(digest.why_it_matters) + '</div>';
+        html += '</div>';
+      }
       html += '</div>';
     }
 
