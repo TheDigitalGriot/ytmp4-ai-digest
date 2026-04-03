@@ -36,12 +36,20 @@ Read every transcript file fully before beginning analysis. Thoroughness over sp
 ### Step 3: Fill comparison_data.json with complete analysis
 Read the comparison_data.json, then update it with ALL of the following fields. Every field is required — the viewer tabs will be empty without them.
 
-#### 3a. Add `summary` to each video object
-Each video in the `videos` array needs a `summary` field (1-2 sentence synopsis):
+#### 3a. Add `summary` and `digest` to each video object
+Each video in the `videos` array needs a `summary` field (1-2 sentence synopsis) and a `digest` object:
 ```json
 {
   "videos": [
-    { "id": "abc123", "title": "...", "summary": "Covers X approach to Y, recommending Z." }
+    {
+      "id": "abc123", "title": "...",
+      "summary": "Covers X approach to Y, recommending Z.",
+      "digest": {
+        "core_takeaway": "2-3 sentences stating conclusions directly",
+        "key_points": ["bullet 1 with specifics", "bullet 2", "bullet 3"],
+        "why_it_matters": "Why this video is worth watching"
+      }
+    }
   ]
 }
 ```

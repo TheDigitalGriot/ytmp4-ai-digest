@@ -16,8 +16,10 @@ Route tasks to the right agent for optimal speed and cost:
 | Task | Agent | Why |
 |------|-------|-----|
 | Fetch videos, list channels, simple queries | `video-fetcher` (haiku) | Fast, cheap — no reasoning needed |
-| Summarize transcripts, write digests | `digest-writer` (sonnet) | Good balance of quality and speed |
-| Cross-video comparison, deep analysis | `video-comparator` (opus) | Needs deep reasoning across sources |
+| Single video URL analysis, batch digests | `digest-writer` (sonnet) | Summarizes + launches viewer for single URLs; handles batch digests |
+| Multi-video comparison (2+ URLs) | `video-comparator` (opus) | Cross-video reasoning, disagreements, deep analysis |
+
+**IMPORTANT:** When the user provides a **single** video URL, route to `digest-writer` — it creates a session, fills analysis, and launches the viewer at Sonnet cost. Only use `video-comparator` for **2+ URLs** where cross-video analysis is needed. The viewer must always launch regardless of which agent handles the request.
 
 ## Workflow
 
@@ -29,19 +31,16 @@ python scripts/fetch_videos.py --days 3             # Default: AI keyword filter
 python scripts/fetch_videos.py --days 3 --all       # All topics, no filter
 python scripts/fetch_videos.py --keyword "blender"   # Custom topic
 
-# Single video transcript + summary
-python scripts/get_transcript.py --video-id VIDEO_ID
+# Analyze video(s) — works with 1 or more URLs
+python scripts/compare_videos.py --urls URL1 [URL2 URL3 ...]
+# Always launch the interactive viewer after analysis:
+python scripts/compare_server.py --port 5123 --session SESSION_ID
 
-# Batch digest (fetches transcripts, Claude fills summaries)
+# Batch digest from subscribed channels (fetches transcripts, Claude fills summaries)
 python scripts/digest_all.py --days 3 --limit 10
 
-# Single video report with thumbnail
-python scripts/generate_report.py --video-id VIDEO_ID --output ~/reports/
-
-# Compare multiple videos
-python scripts/compare_videos.py --urls URL1 URL2 URL3
-# Then launch interactive viewer:
-python scripts/compare_server.py --port 5123 --session SESSION_ID
+# Standalone transcript fetch (for digest workflow, not direct user requests)
+python scripts/get_transcript.py --video-id VIDEO_ID
 ```
 
 **Output locations:**
@@ -60,12 +59,20 @@ After fetching transcript content, Claude proactively completes (no further prom
 
 Style: concise, information-dense. No filler openings like "This video discusses..." — lead with actual content.
 
-## Comparison Analysis
+## Video Analysis
 
-The video-comparator agent handles the full comparison workflow end-to-end. When dispatched, it:
-1. Runs `compare_videos.py` to fetch video data and transcripts
-2. Reads ALL transcripts and fills comparison_data.json with complete analysis
-3. **Launches the viewer automatically** — no second prompt needed
+### Single Video (digest-writer)
+The digest-writer agent handles single video URL analysis end-to-end:
+1. Runs `compare_videos.py --urls URL` to create a session and fetch transcript
+2. Fills comparison_data.json with summary, topics, key moments
+3. **Launches the viewer automatically and provides the link**
+4. Also outputs the summary directly in chat
+
+### Multiple Videos (video-comparator)
+The video-comparator agent handles multi-video comparison end-to-end:
+1. Runs `compare_videos.py --urls URL1 URL2 ...` to fetch all video data and transcripts
+2. Reads ALL transcripts and fills comparison_data.json with complete cross-video analysis
+3. **Launches the viewer automatically and provides the link** — no second prompt needed
 
 The agent fills these required fields (viewer tabs are empty without them):
 - **Per-video `summary`** — added to each video object for the By Video tab
@@ -90,9 +97,10 @@ Edit `${CLAUDE_PLUGIN_ROOT}/data/channels.json` — array of `{"name": "...", "i
 | "Find recent AI videos" | `fetch_videos.py --days 3`, display results |
 | "What's new in Blender?" | `fetch_videos.py --keyword "blender"` |
 | "Create a digest" | `digest_all.py`, read output, generate summaries |
-| "Summarize video #3" | `get_transcript.py`, then summarize |
+| "Summarize this video: URL" | `digest-writer`: `compare_videos.py --urls URL`, summarize, launch viewer |
+| "Summarize video #3" (from fetched list) | `digest-writer`: `compare_videos.py --urls URL`, summarize, launch viewer |
 | "Show all videos, no filter" | `fetch_videos.py --days 3 --all` |
-| "Compare these videos: URL1, URL2" | `compare_videos.py`, analyze, launch viewer |
+| "Compare these videos: URL1, URL2" | `video-comparator`: `compare_videos.py --urls URL1 URL2`, analyze, launch viewer |
 | "What do they disagree on?" | Reference disagreements in comparison data |
 | "Capture the chart at 4:21" | `capture_frames.py` for that timestamp |
 | "Show me all sessions" | Launch viewer showing session history |
